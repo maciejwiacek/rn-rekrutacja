@@ -1,72 +1,139 @@
-import moment, { Moment } from "moment";
-import React, { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { ThemedText } from "../ThemedText";
+import { FontAwesome } from '@expo/vector-icons'
+import moment, { Moment } from 'moment'
+import 'moment/locale/pl'
+import React, { useState } from 'react'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ThemedText } from '../ThemedText'
+import CalendarDay from './CalendarDay'
+
+moment.locale('pl')
 
 export interface WeekViewProps {
-  from: Moment;
-  offerDays: string[];
-  orderDays: string[];
+  from: Moment
+  offerDays: string[]
+  orderDays: string[]
 }
 
-interface MonthDay {
-  day: string;
-  date: string;
-  today: boolean;
-  offer: boolean;
-  order: boolean;
-  isCurrentMonth: boolean;
+export interface MonthDay {
+  day: string
+  date: string
+  today: boolean
+  offer: boolean
+  order: boolean
+  isCurrentMonth: boolean
 }
 
-// TODO: use color theme 
-const blue = "#0070ff";
-const lightBlue = "#4688eb";
-const orange = "#ffaa2a";
+// TODO: use color theme
+const blue = '#0070ff'
+const lightBlue = '#4688eb'
+const orange = '#ffaa2a'
 
-export const DayFormat = "YYYY-MM-DD";
+export const DayFormat = 'YYYY-MM-DD'
 
 export default function MonthView({
   from,
   orderDays,
   offerDays,
 }: WeekViewProps) {
-  const [width, setWidth] = useState<number>(0);
+  const [width, setWidth] = useState<number>(0)
+  const [currentMonth, setCurrentMonth] = useState<Moment>(from)
+  const [selectedDate, setSelectedDate] = useState<MonthDay | null>(null)
 
   // TODO: don't use momentjs - it's obsolete - switch to other library
-  const monthStart = moment(from).startOf("month");
-  const monthEnd = moment(from).endOf("month");
+  const monthStart = moment(currentMonth).startOf('month')
+  const monthEnd = moment(currentMonth).endOf('month')
 
-  const firstMonday = moment(monthStart).startOf("week");
-  const lastSunday = moment(monthEnd).endOf("week");
+  const firstMonday = moment(monthStart).startOf('week')
+  const lastSunday = moment(monthEnd).endOf('week')
 
-  const day = moment(firstMonday);
-  const days: MonthDay[] = [];
+  const day = moment(firstMonday)
+  const days: MonthDay[] = []
 
   while (day.isSameOrBefore(lastSunday)) {
     days.push({
-      day: day.format("DD"),
+      day: day.format('DD'),
       date: day.format(DayFormat),
-      today: day.isSame(moment(), "day"),
+      today: day.isSame(moment(), 'day'),
       offer: offerDays.includes(day.format(DayFormat)),
       order: orderDays.includes(day.format(DayFormat)),
-      isCurrentMonth: day.isSame(from, "month"),
-    });
+      isCurrentMonth: day.isSame(currentMonth, 'month'),
+    })
 
-    day.add(1, "day");
+    day.add(1, 'day')
   }
 
-  const weeks: MonthDay[][] = [];
+  const weeks: MonthDay[][] = []
   for (let i = 0; i < days.length; i += 7) {
-    weeks.push(days.slice(i, i + 7));
+    weeks.push(days.slice(i, i + 7))
   }
 
-  const weekDayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const weekDayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+  const monthTitle = monthStart.format('MMMM YYYY')
+  const monthTitleCapitalized =
+    monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1)
+
+  const sendOrder = async () => {
+    if (!selectedDate) return
+
+    try {
+      const response = await fetch('https://example.com/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: selectedDate,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+
+      const data = await response.json()
+      console.log('Order placed successfully:', data)
+    } catch (error) {
+      console.error('Error placing order:', error)
+    }
+  }
 
   return (
     <View
       style={styles.days}
       onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
     >
+      {/* Calendar header */}
+      <View style={styles.calendarHeader}>
+        <TouchableOpacity
+          style={styles.monthButton}
+          onPress={() =>
+            setCurrentMonth(currentMonth.clone().subtract(1, 'month'))
+          }
+        >
+          <FontAwesome
+            name='chevron-left'
+            size={16}
+            color='#fff'
+            style={{ marginRight: 1 }}
+          />
+        </TouchableOpacity>
+        <ThemedText style={styles.monthTitle}>
+          {monthTitleCapitalized}
+        </ThemedText>
+        <TouchableOpacity
+          style={styles.monthButton}
+          onPress={() => setCurrentMonth(currentMonth.clone().add(1, 'month'))}
+        >
+          <FontAwesome
+            name='chevron-right'
+            size={16}
+            color='#fff'
+            style={{ marginLeft: 3 }}
+          />
+        </TouchableOpacity>
+      </View>
+
       {/* Week day header */}
       <View style={styles.weekHeader}>
         {weekDayNames.map((dayName) => (
@@ -95,45 +162,34 @@ export default function MonthView({
               }}
               key={d.date}
             >
-
-            { /* TODO: Add ability to select day, mark selected day on the calendar.
-            Display day details below the calendar */}
-              <Pressable
-                style={{
-                  ...styles.touchableBox,
-                  ...(d.offer || !d.isCurrentMonth ? {} : styles.noOfferDay),
-                  ...(d.isCurrentMonth ? {} : styles.otherMonthDay),
-                  ...(d.today && d.isCurrentMonth
-                    ? styles.todayBackground
-                    : {}),
-                }}
-                onPress={() => {}}
-              >
-                <View style={styles.dayBox}>
-                  {d.isCurrentMonth && (
-                    <ThemedText
-                      style={{
-                        ...styles.dayText,
-                        ...(d.today ? { fontWeight: "bold", color: blue } : {}),
-                        ...(d.isCurrentMonth ? {} : styles.otherMonthText),
-                      }}
-                    >
-                      {d.day}
-                    </ThemedText>
-                  )}
-                </View>
-              </Pressable>
+              <CalendarDay
+                d={d}
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+              />
             </View>
           ))}
         </View>
       ))}
+
+      {/* Selected date details */}
+      {selectedDate && (
+        <View style={styles.selectedDateDetails}>
+          <ThemedText style={styles.selectedDateText}>
+            {moment(selectedDate.date).format('DD MMMM YYYY')}
+          </ThemedText>
+          <TouchableOpacity style={styles.orderButton} onPress={sendOrder}>
+            <ThemedText style={styles.orderButtonText}>Zamów</ThemedText>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   status: {
-    position: "absolute",
+    position: 'absolute',
     borderRadius: 5,
     width: 15,
     aspectRatio: 1,
@@ -154,7 +210,7 @@ const styles = StyleSheet.create({
   cancelled: {
     bottom: -3,
     left: -3,
-    backgroundColor: "#666",
+    backgroundColor: '#666',
   },
   added: {
     bottom: -3,
@@ -163,30 +219,26 @@ const styles = StyleSheet.create({
   },
   orderedText: {
     fontSize: 10,
-    textAlign: "center",
-    fontFamily: "poppins-bold",
-    color: "#fff",
+    textAlign: 'center',
+    fontFamily: 'poppins-bold',
+    color: '#fff',
   },
   days: {
     marginVertical: 2,
     marginHorizontal: 2,
-    alignSelf: "stretch",
+    alignSelf: 'stretch',
   },
   weekHeader: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   weekRow: {
-    flexDirection: "row",
-  },
-  dayText: {
-    textAlign: "center",
-    fontSize: 13,
+    flexDirection: 'row',
   },
   weekDayName: {
-    textAlign: "center",
-    color: "#aaa",
-    fontFamily: "poppins-bold",
-    textTransform: "uppercase",
+    textAlign: 'center',
+    color: '#aaa',
+    fontFamily: 'poppins-bold',
+    textTransform: 'uppercase',
     fontSize: 8,
   },
   selectedDay: {
@@ -194,34 +246,46 @@ const styles = StyleSheet.create({
     borderColor: blue,
   },
   today: {
-    color: "#555",
+    color: '#555',
   },
-  todayBackground: {
-    borderWidth: 1,
-    borderRadius: 4,
-    borderColor: blue,
+  monthTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
-  touchableBox: {
-    backgroundColor: "#f6f6f6",
-    aspectRatio: 1,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#f6f6f6",
-    justifyContent: "center",
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
   },
-  dayBox: {
-    justifyContent: "center",
-    marginHorizontal: 0,
+  monthButton: {
+    backgroundColor: lightBlue,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 15,
   },
-  otherMonthDay: {
-    backgroundColor: "#f0f0f0",
-    borderColor: "#f0f0f0",
-    opacity: 0.4,
+  selectedDateDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
   },
-  noOfferDay: {
-    opacity: 0.4,
+  selectedDateText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: blue,
   },
-  otherMonthText: {
-    color: "#ccc",
+  orderButton: {
+    backgroundColor: lightBlue,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 15,
   },
-});
+  orderButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+})

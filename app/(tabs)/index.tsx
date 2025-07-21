@@ -1,12 +1,12 @@
-import { Image } from 'expo-image';
-import { StyleSheet } from 'react-native';
+import { Image } from 'expo-image'
+import { StyleSheet } from 'react-native'
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import Calendar from '@/components/calendar/Calendar';
-import moment from 'moment';
+import { HelloWave } from '@/components/HelloWave'
+import ParallaxScrollView from '@/components/ParallaxScrollView'
+import { ThemedText } from '@/components/ThemedText'
+import { ThemedView } from '@/components/ThemedView'
+import Calendar from '@/components/calendar/Calendar'
+import moment from 'moment'
 
 export default function HomeScreen() {
   return (
@@ -17,39 +17,27 @@ export default function HomeScreen() {
           source={require('@/assets/images/pagaspot-screen.png')}
           style={styles.reactLogo}
         />
-      }>
+      }
+    >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Hej!</ThemedText>
+        <ThemedText type='title'>Hej!</ThemedText>
         <HelloWave />
       </ThemedView>
 
-
       <Calendar
-        from={moment("2025-08-01")}
-        offerDays={['2025-08-10','2025-08-11','2025-08-12','2025-08-15','2025-08-17','2025-08-18']}
+        from={moment('2025-08-01')}
+        offerDays={[
+          '2025-08-10',
+          '2025-08-11',
+          '2025-08-12',
+          '2025-08-15',
+          '2025-08-17',
+          '2025-08-18',
+        ]}
         orderDays={[]}
       />
-
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Twoje zadanie</ThemedText>
-        <ThemedText>
-          Usprawnij kalendarz powyżej według instrukcji z maila.
-        </ThemedText>
-        <ThemedText>
-          W components/calendar/Calendar.tsx znajdziesz kod które trzeba rozwinąć.
-        </ThemedText>
-        
-        <ThemedText>
-          Zwróć uwagę na TODO w komentarzach, zrób tyle ile uważasz.
-          Poświęć na to zadanie max 1.5 godziny
-        </ThemedText>
-        <ThemedText>
-          Ten tekst możesz usunąć
-        </ThemedText>
-      </ThemedView>
-
     </ParallaxScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -69,4 +57,4 @@ const styles = StyleSheet.create({
     left: 0,
     position: 'absolute',
   },
-});
+})
