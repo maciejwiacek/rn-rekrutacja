@@ -1,6 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons'
 import React, { useState } from 'react'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { ThemedText } from '../ThemedText'
 import CalendarDay from './CalendarDay'
 
@@ -102,10 +102,19 @@ export default function MonthView({
       }
 
       const data = await response.json()
-      console.log('Order placed successfully:', data)
+      Alert.alert(
+        'Order placed',
+        `Your order for ${data.date} has been placed successfully!`
+      )
     } catch (error) {
-      console.error('Error placing order:', error)
+      console.log('Order error:', error)
+      Alert.alert(
+        'Order failed',
+        'There was an error placing your order. Please try again later.'
+      )
     }
+
+    setSelectedDate(null)
   }
 
   return (
