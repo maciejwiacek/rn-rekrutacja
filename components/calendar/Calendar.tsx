@@ -1,15 +1,26 @@
 import { FontAwesome } from '@expo/vector-icons'
-import moment, { Moment } from 'moment'
-import 'moment/locale/pl'
 import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { ThemedText } from '../ThemedText'
 import CalendarDay from './CalendarDay'
 
-moment.locale('pl')
+import dayjs from 'dayjs'
+import 'dayjs/locale/pl'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import isoWeek from 'dayjs/plugin/isoWeek'
+import localeData from 'dayjs/plugin/localeData'
+import localizedFormat from 'dayjs/plugin/localizedFormat'
+
+dayjs.extend(localizedFormat)
+dayjs.extend(isSameOrBefore)
+dayjs.extend(isoWeek)
+dayjs.extend(localeData)
+dayjs.extend(customParseFormat)
+dayjs.locale('pl')
 
 export interface WeekViewProps {
-  from: Moment
+  from: dayjs.Dayjs
   offerDays: string[]
   orderDays: string[]
 }
@@ -36,30 +47,29 @@ export default function MonthView({
   offerDays,
 }: WeekViewProps) {
   const [width, setWidth] = useState<number>(0)
-  const [currentMonth, setCurrentMonth] = useState<Moment>(from)
+  const [currentMonth, setCurrentMonth] = useState<dayjs.Dayjs>(from)
   const [selectedDate, setSelectedDate] = useState<MonthDay | null>(null)
 
-  // TODO: don't use momentjs - it's obsolete - switch to other library
-  const monthStart = moment(currentMonth).startOf('month')
-  const monthEnd = moment(currentMonth).endOf('month')
+  const monthStart = dayjs(currentMonth).startOf('month')
+  const monthEnd = dayjs(currentMonth).endOf('month')
 
-  const firstMonday = moment(monthStart).startOf('week')
-  const lastSunday = moment(monthEnd).endOf('week')
+  const firstMonday = dayjs(monthStart).startOf('week')
+  const lastSunday = dayjs(monthEnd).endOf('week')
 
-  const day = moment(firstMonday)
+  let day = firstMonday
   const days: MonthDay[] = []
 
   while (day.isSameOrBefore(lastSunday)) {
     days.push({
       day: day.format('DD'),
       date: day.format(DayFormat),
-      today: day.isSame(moment(), 'day'),
+      today: day.isSame(dayjs(), 'day'),
       offer: offerDays.includes(day.format(DayFormat)),
       order: orderDays.includes(day.format(DayFormat)),
       isCurrentMonth: day.isSame(currentMonth, 'month'),
     })
 
-    day.add(1, 'day')
+    day = day.add(1, 'day')
   }
 
   const weeks: MonthDay[][] = []
@@ -107,9 +117,7 @@ export default function MonthView({
       <View style={styles.calendarHeader}>
         <TouchableOpacity
           style={styles.monthButton}
-          onPress={() =>
-            setCurrentMonth(currentMonth.clone().subtract(1, 'month'))
-          }
+          onPress={() => setCurrentMonth(currentMonth.subtract(1, 'month'))}
         >
           <FontAwesome
             name='chevron-left'
@@ -123,7 +131,7 @@ export default function MonthView({
         </ThemedText>
         <TouchableOpacity
           style={styles.monthButton}
-          onPress={() => setCurrentMonth(currentMonth.clone().add(1, 'month'))}
+          onPress={() => setCurrentMonth(currentMonth.add(1, 'month'))}
         >
           <FontAwesome
             name='chevron-right'
@@ -176,7 +184,7 @@ export default function MonthView({
       {selectedDate && (
         <View style={styles.selectedDateDetails}>
           <ThemedText style={styles.selectedDateText}>
-            {moment(selectedDate.date).format('DD MMMM YYYY')}
+            {dayjs(selectedDate.date).format('DD MMMM YYYY')}
           </ThemedText>
           <TouchableOpacity style={styles.orderButton} onPress={sendOrder}>
             <ThemedText style={styles.orderButtonText}>Zamów</ThemedText>

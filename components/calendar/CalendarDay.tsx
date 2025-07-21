@@ -1,9 +1,7 @@
+import { useThemeColor } from '@/hooks/useThemeColor'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { ThemedText } from '../ThemedText'
 import { MonthDay } from './Calendar'
-
-const blue = '#0070ff'
-const lightBlue = '#4688eb'
 
 interface CalendarDayProps {
   d: MonthDay
@@ -16,27 +14,32 @@ const CalendarDay = ({
   selectedDate,
   setSelectedDate,
 }: CalendarDayProps) => {
+  const blue = useThemeColor({}, 'blue')
+  const lightBlue = useThemeColor({}, 'lightBlue')
+
+  const isSelected = selectedDate?.date === d.date
+  const isSelectable = d.isCurrentMonth && (d.offer || d.order)
+
+  const handlePress = () => {
+    if (isSelected || !isSelectable) {
+      setSelectedDate(null)
+    } else {
+      setSelectedDate(d)
+    }
+  }
+
   return (
     <Pressable
       style={{
         ...styles.touchableBox,
         ...(d.offer || !d.isCurrentMonth ? {} : styles.noOfferDay),
         ...(d.isCurrentMonth ? {} : styles.otherMonthDay),
-        ...(d.today && d.isCurrentMonth ? styles.todayBackground : {}),
-        ...(selectedDate?.date === d.date
-          ? { backgroundColor: lightBlue }
+        ...(d.today && d.isCurrentMonth
+          ? { ...styles.todayBackground, borderColor: blue }
           : {}),
+        ...(isSelected ? { backgroundColor: lightBlue } : {}),
       }}
-      onPress={() => {
-        const isSelected = selectedDate?.date === d.date
-        const isSelectable = d.isCurrentMonth && (d.offer || d.order)
-
-        if (isSelected || !isSelectable) {
-          setSelectedDate(null)
-        } else {
-          setSelectedDate(d)
-        }
-      }}
+      onPress={handlePress}
     >
       <View style={styles.dayBox}>
         {d.isCurrentMonth && (
@@ -45,6 +48,7 @@ const CalendarDay = ({
               ...styles.dayText,
               ...(d.today ? { fontWeight: 'bold', color: blue } : {}),
               ...(d.isCurrentMonth ? {} : styles.otherMonthText),
+              ...(isSelected ? { color: '#fff' } : {}),
             }}
           >
             {d.day}
@@ -77,7 +81,6 @@ const styles = StyleSheet.create({
   todayBackground: {
     borderWidth: 1,
     borderRadius: 4,
-    borderColor: blue,
   },
   dayBox: {
     justifyContent: 'center',
